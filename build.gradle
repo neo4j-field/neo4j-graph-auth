@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+group 'com.neo4j.field.graph-auth'
+version '1.0-SNAPSHOT'
+
+repositories {
+    maven {
+        url "https://neo4j.bintray.com/enterprise-sources"
+        credentials {
+            // define user and password in your $HOME/.gradle/gradle.properties
+            username neo4j_enterprise_source_user
+            password neo4j_enterprise_source_password
+        }
+        authentication {
+            basic(BasicAuthentication)
+        }
+        content {
+            includeGroup 'com.neo4j'
+        }
+    }
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.neo4j:neo4j-auth-plugin-api:4.2.3'
+    implementation 'org.neo4j:neo4j-configuration:4.2.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}

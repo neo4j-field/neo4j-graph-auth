@@ -24,8 +24,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.neo4j:neo4j-auth-plugin-api:4.2.3'
-    implementation 'org.neo4j:neo4j-configuration:4.2.3'
+    compileOnly 'com.neo4j:neo4j-auth-plugin-api:4.2.3'
+    compileOnly 'org.neo4j:neo4j-configuration:4.2.3'
+    compileOnly 'org.neo4j:neo4j-kernel:4.2.3'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }

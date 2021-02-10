@@ -5,12 +5,19 @@ import com.neo4j.server.security.enterprise.auth.plugin.api.PredefinedRoles;
 import com.neo4j.server.security.enterprise.auth.plugin.spi.AuthorizationInfo;
 import com.neo4j.server.security.enterprise.auth.plugin.spi.AuthorizationPlugin;
 
+import java.security.AuthProvider;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GraphAuthPlugin extends AuthorizationPlugin.Adapter {
 
     private AuthProviderOperations api;
+
+    private static final String ROLE_LOOKUP =
+            "MATCH (:User {name: $name})-[*]->(r:Role) RETURN r.name AS role";
 
     @Override
     public String name() {
@@ -19,10 +26,25 @@ public class GraphAuthPlugin extends AuthorizationPlugin.Adapter {
 
     @Override
     public AuthorizationInfo authorize(Collection<PrincipalAndProvider> principals) {
-        for (PrincipalAndProvider pap : principals) {
-            api.log().info(String.format("processing pap {provider: %s, principal: %s}", pap.provider(), pap.principal()));
+        try {
+            for (PrincipalAndProvider pap : principals) {
+                if (pap.provider() == "native") {
+                    final String principal = pap.principal().toString();
+                    final String dbName = GraphAuthExtensionFactory.SECURITY_DATABASE_NAME;
+
+                    return AuthorizationInfo.of(
+                            GraphAuthExtensionFactory.execute(
+                                    dbName, ROLE_LOOKUP, Collections.singletonMap("name", principal))
+                            .stream()
+                            .map(row -> row.get("role").toString())
+                            .collect(Collectors.toList()));
+                }
+            }
+        } catch (Exception e) {
+            api.log().error(e.getMessage());
+            e.printStackTrace(System.err);
         }
-        return AuthorizationInfo.of(Collections.singleton(PredefinedRoles.ADMIN));
+        return AuthorizationInfo.of(Collections.singleton(PredefinedRoles.PUBLIC));
     }
 
     @Override

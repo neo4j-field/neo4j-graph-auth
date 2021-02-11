@@ -6,6 +6,7 @@ import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.event.TransactionEventListener;
 import org.neo4j.kernel.extension.ExtensionFactory;
 import org.neo4j.kernel.extension.ExtensionType;
 import org.neo4j.kernel.extension.context.ExtensionContext;
@@ -56,6 +57,8 @@ public class GraphAuthExtensionFactory extends ExtensionFactory<GraphAuthExtensi
     @Override
     public Lifecycle newInstance(ExtensionContext context, Dependencies dependencies) {
         return new LifecycleAdapter() {
+            private final Map<String, TransactionEventListener> listeners = new HashMap<>();
+
             @Override
             public void init() throws Exception {
                 super.init();
@@ -68,6 +71,7 @@ public class GraphAuthExtensionFactory extends ExtensionFactory<GraphAuthExtensi
             public void start() throws Exception {
                 super.start();
 
+                // Initialize our security database
                 final String systemDb = GraphDatabaseSettings.SYSTEM_DATABASE_NAME;
                 final String cypher = StandardCharsets.UTF_8.decode(
                         ByteBuffer.wrap(
@@ -83,6 +87,18 @@ public class GraphAuthExtensionFactory extends ExtensionFactory<GraphAuthExtensi
                     execute(SECURITY_DATABASE_NAME, cypher);
                     log.info("bootstrapped security db");
                 }
+
+                // Register our Ownership Listener
+                OwnershipListener listener = new OwnershipListener(dbms, logService.getUserLog(OwnershipListener.class));
+                listeners.put(GraphDatabaseSettings.DEFAULT_DATABASE_NAME, listener);
+                dbms.registerTransactionEventListener(GraphDatabaseSettings.DEFAULT_DATABASE_NAME, listener);
+            }
+
+            @Override
+            public void stop() throws Exception {
+                super.stop();
+                listeners.keySet().stream()
+                        .forEach(key -> dbms.unregisterTransactionEventListener(key, listeners.get(key)));
             }
         };
     }

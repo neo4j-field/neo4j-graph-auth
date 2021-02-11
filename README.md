@@ -59,8 +59,8 @@ You should end up with a database that has a `neo4j` user with password set to
 As the `neo4j` users, Create two new users: `dave` and `sam`
 
 ```cypher
-CREATE USER dave SET PASSWORD "password" CHANGE NO REQUIRED;
-CREATE USER sam SET PASSWORD "password" CHANGE NO REQUIRED;
+CREATE USER dave SET PASSWORD "password" CHANGE NOT REQUIRED;
+CREATE USER sam SET PASSWORD "password" CHANGE NOT REQUIRED;
 ```
 
 Both users already have group memberships in the graph, so do a 

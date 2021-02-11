@@ -32,7 +32,19 @@ $ ./gradlew jar
 ```
 
 ## Using
-Right now this is simple...things are hardcoded...but I did provide a
+It's easy!
+
+### Via Neo4j Desktop
+Grab that jar file from `build/libs/` and pop it in your `plugins` directory.
+
+You then just need to set the following in your `neo4j.conf`:
+
+```properties
+dbms.security.authorization_providers=plugin-graph-auth
+```
+
+### Via Docker
+Right now this is simple...things are hardcoded...but, I did provide a
 [Dockerfile](./Dockerfile) you can use to fire up a local instance.
 
 ```
